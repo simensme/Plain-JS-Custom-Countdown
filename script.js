@@ -15,6 +15,7 @@ let countdownTitle = '';
 let countdownDate = '';
 let countdownValue = Date;
 let countdownActive;
+let savedCountdown;
 
 const second = 1000;
 const minute = second * 60;
@@ -42,16 +43,19 @@ const updateDOM = () => {
         if (distance < 0) {
             countdownEl.hidden = true;
             clearInterval(countdownActive);
+
             // Custom Countdown Date
             const formatDate = inputDate => {
-                const options = {day: 'numeric', month: 'long', year: 'numeric'};
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
                 const date = new Date(inputDate);
                 return date.toLocaleDateString('en-GB', options);
             };
             const customDate = formatDate(countdownDate);
             completeElInfo.textContent = `${countdownTitle} finished on ${customDate}`;
             completeEl.hidden = false;
+
         } else {
+
             // Show the countdown in progress
             // Populate the countdown page
             countdownElTitle.textContent = `${countdownTitle}`;
@@ -70,6 +74,14 @@ const updateCountdown = e => {
     e.preventDefault();
     countdownTitle = e.srcElement[0].value;
     countdownDate = e.srcElement[1].value;
+
+    // Save the settings to local storage
+    savedCountdown = {
+        title: countdownTitle,
+        date: countdownDate
+    };
+    localStorage.setItem('countdown', JSON.stringify(savedCountdown));
+
     // Check for valid date
     if (countdownDate === '') {
         alert('Please insert a date');
@@ -93,9 +105,25 @@ const reset = () => {
     // Reset the values for our countdown title etc
     countdownTitle = '';
     countdownDate = '';
+    localStorage.removeItem('countdown');
+};
+
+const restorePreviousCountdown = () => {
+    // Get countdown from local storage if it exists
+    if (localStorage.getItem('countdown')){
+        inputContainer.hidden = true;
+        savedCountdown = JSON.parse(localStorage.getItem('countdown'));
+        countdownTitle = savedCountdown.title;
+        countdownDate = savedCountdown.date;
+        countdownValue = new Date(countdownDate).getTime();
+        updateDOM();
+    }
 }
 
 // Event Listener for forms
 countdownForm.addEventListener('submit', updateCountdown);
 countdownBtn.addEventListener('click', reset);
 completeBtn.addEventListener('click', reset);
+
+// On load, check if there is local storage
+restorePreviousCountdown();
